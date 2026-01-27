@@ -6,7 +6,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Call
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-TOKEN = "1043571632:AAEwQsrxojmo79QFquKR9-SDghPPKORzwEQ"
+TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
 ALLOWED_USERS = {501851181}  # ID членов семьи
 
 PRODUCT_CATEGORIES = {
@@ -231,3 +231,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
