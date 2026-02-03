@@ -500,70 +500,42 @@ async def send_shopping_list(
 def main() -> None:
     """Основная функция запуска бота в режиме webhook на Render"""
     try:
-        # Создаем приложение
         app = Application.builder().token(TOKEN).build()
-
-        # Регистрируем обработчики команд
         app.add_handler(CommandHandler("start", start))
         app.add_handler(CommandHandler("clear", clear_list))
-
-        # Регистрируем обработчик callback-кнопок
         app.add_handler(CallbackQueryHandler(button_handler))
 
         logger.info("=" * 50)
-        logger.info("Shopping List Bot started successfully (webhook mode)!")
-        logger.info(f"Authorized users: {ALLOWED_USERS}")
-        logger.info(f"Categories loaded: {len(PRODUCT_CATEGORIES)}")
+        logger.info("Бот для составления списков покупок успешно запущен (в режиме веб-перехватчика)!")
+        logger.info(f"Авторизованные пользователи: {ALLOWED_USERS}")
+        logger.info(f"Загружено категорий: {len(PRODUCT_CATEGORIES)}")
         logger.info("=" * 50)
 
-        # ------------------------------------------------------------------
-        # НАСТРОЙКИ ДЛЯ RENDER
-        # ------------------------------------------------------------------
-        # Render даёт URL сервиса в переменной окружения
+        # --- Render webhook config ---
         render_url = os.getenv("RENDER_EXTERNAL_URL")
         if not render_url:
             raise RuntimeError("RENDER_EXTERNAL_URL is not set")
 
-        # Порт, к которому нужно привязаться (Render ожидает, что мы слушаем PORT)
         port = int(os.getenv("PORT", "10000"))
-
-        # Путь webhook'а (можешь поменять на любой)
         webhook_path = "/webhook"
-
-        # Полный URL, который Telegram будет вызывать
         webhook_url = f"{render_url}{webhook_path}"
 
-        logger.info(f"Using webhook URL: {webhook_url} on port {port}")
+        logger.info(f"Используется URL веб-перехватчика: {webhook_url} на порту {port}")
 
-        # Настраиваем webhook
-        async def run():
-            # Сбрасываем старый webhook и ставим новый
-            await app.bot.delete_webhook()
-            await app.bot.set_webhook(url=webhook_url)
-
-            # Запускаем встроенный веб‑сервер PTB, который слушает PORT
-            await app.run_webhook(
-                listen="0.0.0.0",
-                port=port,
-                url_path=webhook_path,
-                webhook_url=webhook_url,
-                allowed_updates=Update.ALL_TYPES,
-                drop_pending_updates=True,
-            )
-
-        # Запускаем асинхронный цикл
-        import asyncio
-        asyncio.run(run())
+        # ВАЖНО: вызываем run_webhook напрямую, БЕЗ asyncio.run(...)
+        app.run_webhook(
+            listen="0.0.0.0",
+            port=port,
+            url_path=webhook_path,
+            webhook_url=webhook_url,
+            allowed_updates=Update.ALL_TYPES,
+            drop_pending_updates=True,
+        )
 
     except Exception as e:
-        logger.error(f"Failed to start bot: {e}")
+        logger.error(f"Не удалось запустить бота: {e}")
         raise
 
 
-# ============================================================================
-# ENTRY POINT / ТОЧКА ВХОДА
-# ============================================================================
-
 if __name__ == "__main__":
     main()
-
